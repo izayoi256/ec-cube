@@ -32,6 +32,7 @@ $allow = array(
     '127.0.0.1',
     'fe80::1',
     '::1',
+    '192.168.33.1',
 );
 
 if (isset($_SERVER['HTTP_CLIENT_IP'])
