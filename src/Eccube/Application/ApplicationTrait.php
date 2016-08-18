@@ -2,6 +2,7 @@
 
 namespace Eccube\Application;
 
+use Eccube\Event\RenderEvent;
 use Eccube\Event\TemplateEvent;
 use Monolog\Logger;
 use Symfony\Component\Form\FormBuilder;
@@ -236,6 +237,7 @@ class ApplicationTrait extends \Silex\Application
             // 管理画面の場合、event名に「Admin/」を付ける
             $eventName = 'Admin/' . $view;
         }
+        $renderEventName = $eventName . '/render';
         $this['monolog']->debug('Template Event Name : ' . $eventName);
 
         $this['eccube.event.dispatcher']->dispatch($eventName, $event);
@@ -255,6 +257,10 @@ class ApplicationTrait extends \Silex\Application
             // レンダリング実行.
             $content = $template->render($event->getParameters());
             $response->setContent($content);
+
+            $renderEvent = new RenderEvent($view, $parameters, $response);
+            $this['monolog']->debug('Render Event Name : ' . $renderEventName);
+            $this['eccube.event.dispatcher']->dispatch($renderEventName, $renderEvent);
         }
 
         return $response;
