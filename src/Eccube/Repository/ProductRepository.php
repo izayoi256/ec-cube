@@ -25,6 +25,7 @@
 namespace Eccube\Repository;
 
 use Eccube\Application;
+use Eccube\Event\EventArgs;
 use Eccube\Util\Str;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
@@ -118,29 +119,9 @@ class ProductRepository extends EntityRepository
         }
 
         // Order By
-        // 価格低い順
-        $config = $this->app['config'];
-        if (!empty($searchData['orderby']) && $searchData['orderby']->getId() == $config['product_order_price_lower']) {
-            //@see http://doctrine-orm.readthedocs.org/en/latest/reference/dql-doctrine-query-language.html
-            $qb->addSelect('MIN(pc.price02) as HIDDEN price02_min');
-            $qb->innerJoin('p.ProductClasses', 'pc');
-            $qb->groupBy('p');
-            // postgres9.0以下は, groupBy('p.id')が利用できない
-            // mysqlおよびpostgresql9.1以上であればgroupBy('p.id')にすることで性能向上が期待できる.
-            // @see https://github.com/EC-CUBE/ec-cube/issues/1904
-            // $qb->groupBy('p.id');
-            $qb->orderBy('price02_min', 'ASC');
-            $qb->addOrderBy('p.id', 'DESC');
-            // 価格高い順
-        } else if (!empty($searchData['orderby']) && $searchData['orderby']->getId() == $config['product_order_price_higher']) {
-            $qb->addSelect('MAX(pc.price02) as HIDDEN price02_max');
-            $qb->innerJoin('p.ProductClasses', 'pc');
-            $qb->groupBy('p');
-            $qb->orderBy('price02_max', 'DESC');
-            $qb->addOrderBy('p.id', 'DESC');
-            // 新着順
-        } else if (!empty($searchData['orderby']) && $searchData['orderby']->getId() == $config['product_order_newer']) {
-            $qb->orderBy('p.create_date', 'DESC');
+        if (Str::isNotBlank($searchData['orderby'])) {
+            $event = new EventArgs(compact('qb', 'searchData'));
+            $this->app['eccube.event.dispatcher']->dispatch(sprintf('product.orderby.%s', $searchData['orderby']), $event);
         } else {
             if ($categoryJoin === false) {
                 $qb
@@ -152,6 +133,52 @@ class ProductRepository extends EntityRepository
         }
 
         return $qb;
+    }
+
+    /**
+     * 新着順
+     *
+     * @param EventArgs $event
+     */
+    public function onProductOrderNewer(EventArgs $event)
+    {
+        $qb = $event->getArgument('qb');
+        $qb->orderBy('p.create_date', 'DESC');
+    }
+
+    /**
+     * 価格が低い順
+     *
+     * @param EventArgs $event
+     */
+    public function onProductOrderPriceLower(EventArgs $event)
+    {
+        $qb = $event->getArgument('qb');
+        //@see http://doctrine-orm.readthedocs.org/en/latest/reference/dql-doctrine-query-language.html
+        $qb->addSelect('MIN(pc.price02) as HIDDEN price02_min');
+        $qb->innerJoin('p.ProductClasses', 'pc');
+        $qb->groupBy('p');
+        // postgres9.0以下は, groupBy('p.id')が利用できない
+        // mysqlおよびpostgresql9.1以上であればgroupBy('p.id')にすることで性能向上が期待できる.
+        // @see https://github.com/EC-CUBE/ec-cube/issues/1904
+        // $qb->groupBy('p.id');
+        $qb->orderBy('price02_min', 'ASC');
+        $qb->addOrderBy('p.id', 'DESC');
+    }
+
+    /**
+     * 価格が高い順
+     *
+     * @param EventArgs $event
+     */
+    public function onProductOrderPriceHigher(EventArgs $event)
+    {
+        $qb = $event->getArgument('qb');
+        $qb->addSelect('MAX(pc.price02) as HIDDEN price02_max');
+        $qb->innerJoin('p.ProductClasses', 'pc');
+        $qb->groupBy('p');
+        $qb->orderBy('price02_max', 'DESC');
+        $qb->addOrderBy('p.id', 'DESC');
     }
 
     /**

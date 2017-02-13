@@ -927,6 +927,10 @@ class Application extends ApplicationTrait
                 }
             }
         }
+
+        $this['eccube.event.dispatcher']->addListener('product.orderby.product_order_newer', array($this['eccube.repository.product'], 'onProductOrderNewer'));
+        $this['eccube.event.dispatcher']->addListener('product.orderby.product_order_price_lower', array($this['eccube.repository.product'], 'onProductOrderPriceLower'));
+        $this['eccube.event.dispatcher']->addListener('product.orderby.product_order_price_higher', array($this['eccube.repository.product'], 'onProductOrderPriceHigher'));
     }
 
     /**
