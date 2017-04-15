@@ -13,8 +13,8 @@ class CompareContext
     }
 
     /**
-     * @param $CartItem1
-     * @param $CartItem2
+     * @param \Eccube\Entity\CartItem $CartItem1
+     * @param \Eccube\Entity\CartItem $CartItem2
      * @return bool
      */
     public function compare($CartItem1, $CartItem2)
@@ -30,7 +30,7 @@ class CompareContext
     }
 
     /**
-     * @param Strategy\CartComparatorStrategyInterface $strategy
+     * @param \Eccube\Service\CartComparator\Strategy\CartComparatorStrategyInterface $strategy
      * @return $this
      */
     public function addStrategy(\Eccube\Service\CartComparator\Strategy\CartComparatorStrategyInterface $strategy)
