@@ -62,10 +62,14 @@ class EccubeServiceProvider implements ServiceProviderInterface, EventListenerPr
         $app['eccube.cart.comparator.context'] = function () use ($app) {
             $context = new \Eccube\Service\CartComparator\CompareContext();
             $context->addStrategy($app['eccube.cart.comparator.strategy.product_class']);
+            $context->addStrategy($app['eccube.cart.comparator.strategy.some_option']);
             return $context;
         };
         $app['eccube.cart.comparator.strategy.product_class'] = function () {
             return new \Eccube\Service\CartComparator\Strategy\ProductClassStrategy();
+        };
+        $app['eccube.cart.comparator.strategy.some_option'] = function () {
+            return new \Eccube\Service\CartComparator\Strategy\SomeOptionStrategy();
         };
         $app['eccube.service.order'] = function () use ($app) {
             return new \Eccube\Service\OrderService($app);

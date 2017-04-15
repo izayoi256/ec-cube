@@ -33,9 +33,16 @@ use Eccube\Form\Type\AddCartType;
 use Eccube\Form\Type\Master\ProductListMaxType;
 use Eccube\Form\Type\Master\ProductListOrderByType;
 use Eccube\Form\Type\SearchProductType;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * @Route("/products")
+ */
 class ProductController
 {
 
@@ -46,6 +53,16 @@ class ProductController
         $this->title = '';
     }
 
+    /**
+     * 一覧画面表示
+     *
+     * @Route("/list", name="product_list")
+     * @Template("Product/list.twig")
+     *
+     * @param Application $app
+     * @param Request $request
+     * @return array
+     */
     public function index(Application $app, Request $request)
     {
         $BaseInfo = $app['eccube.repository.base_info']->get();
@@ -190,7 +207,7 @@ class ProductController
 
         $Category = $searchForm->get('category_id')->getData();
 
-        return $app->render('Product/list.twig', array(
+        return [
             'subtitle' => $this->getPageTitle($searchData),
             'pagination' => $pagination,
             'search_form' => $searchForm->createView(),
@@ -198,9 +215,20 @@ class ProductController
             'order_by_form' => $orderByForm->createView(),
             'forms' => $forms,
             'Category' => $Category,
-        ));
+        ];
     }
 
+    /**
+     * 購入画面表示
+     *
+     * @Route("/detail/{id}", name="product_detail")
+     * @Template("Product/detail.twig")
+     *
+     * @param Application $app
+     * @param Request $request
+     * @param integer $id
+     * @return array
+     */
     public function detail(Application $app, Request $request, $id)
     {
         $BaseInfo = $app['eccube.repository.base_info']->get();
@@ -330,13 +358,13 @@ class ProductController
             $is_favorite = $app['eccube.repository.customer_favorite_product']->isFavorite($Customer, $Product);
         }
 
-        return $app->render('Product/detail.twig', array(
+        return [
             'title' => $this->title,
             'subtitle' => $Product->getName(),
             'form' => $form->createView(),
             'Product' => $Product,
             'is_favorite' => $is_favorite,
-        ));
+        ];
     }
 
     /**

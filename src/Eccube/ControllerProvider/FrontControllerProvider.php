@@ -103,8 +103,8 @@ class FrontControllerProvider implements ControllerProviderInterface
         $c->match('/mypage/withdraw_complete', '\Eccube\Controller\Mypage\WithdrawController::complete')->bind('mypage_withdraw_complete');
 
         // products
-        $c->match('/products/list', '\Eccube\Controller\ProductController::index')->bind('product_list');
-        $c->match('/products/detail/{id}', '\Eccube\Controller\ProductController::detail')->bind('product_detail')->assert('id', '\d+');
+        //$c->match('/products/list', '\Eccube\Controller\ProductController::index')->bind('product_list');
+        //$c->match('/products/detail/{id}', '\Eccube\Controller\ProductController::detail')->bind('product_detail')->assert('id', '\d+');
 
         // shopping
         //$c->match('/shopping', '\Eccube\Controller\ShoppingController::index')->bind('shopping');

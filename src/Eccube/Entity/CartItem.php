@@ -33,13 +33,17 @@ class CartItem extends \Eccube\Entity\AbstractEntity
     private $quantity;
     private $object;
 
+    /** @var \Doctrine\Common\Collections\ArrayCollection */
+    private $options;
+
     public function __construct()
     {
+        $this->options = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     public function __sleep()
     {
-        return array('class_name', 'class_id', 'price', 'quantity');
+        return array('class_name', 'class_id', 'price', 'quantity', 'options');
     }
 
     /**
@@ -143,5 +147,53 @@ class CartItem extends \Eccube\Entity\AbstractEntity
     public function getObject()
     {
         return $this->object;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+    /**
+     * Add Option
+     *
+     * @param integer|string $key
+     * @param object $option
+     * @return $this
+     */
+    public function setOption($key, $option)
+    {
+        $this->options->set($key, $option);
+
+        return $this;
+    }
+
+    /**
+     * Remove Option Element
+     *
+     * @param object $option
+     * @return $this
+     */
+    public function removeOptionElement($option)
+    {
+        $this->options->removeElement($option);
+
+        return $this;
+    }
+
+    /**
+     * Remove Option
+     *
+     * @param integer|string $key
+     * @return $this
+     */
+    public function removeOption($key)
+    {
+        $this->options->remove($key);
+
+        return $this;
     }
 }
