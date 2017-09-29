@@ -262,6 +262,7 @@ $(function() {
                                                 <div id="result_list__item_menu_toggle--{{ Product.id }}" class="dropdown">
                                                     <a class="dropdown-toggle" data-toggle="dropdown"><svg class="cb cb-ellipsis-h"><use xlink:href="#cb-ellipsis-h"></svg></a>
                                                     <ul id="result_list__item_menu--{{ Product.id }}" class="dropdown-menu dropdown-menu-right">
+                                                    <li><a href="{{ url('admin_product_class', { id : Product.id }) }}">新規格</a></li>
                                                     <li><a href="{{ url('admin_product_product_class', { id : Product.id }) }}">規格</a></li>
                                                     <li><a href="{{ url('admin_product_product_display', {'id' : Product.id}) }}" target="_blank">確認</a></li>
                                                     <li><a href="{{ url('admin_product_product_copy', {'id' : Product.id}) }}" {{ csrf_token_for_anchor() }} data-method="post" data-message="商品情報を複製してもよろしいですか？">複製</a></li>

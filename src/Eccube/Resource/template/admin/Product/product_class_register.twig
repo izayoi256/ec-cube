@@ -1,0 +1,271 @@
+{% extends 'default_frame.twig' %}
+
+{% set menus = ['product', 'product_master'] %}
+
+{% block title %}商品管理{% endblock %}
+{% block sub_title %}商品登録(商品規格){% endblock %}
+
+{% form_theme form 'Form/bootstrap_3_horizontal_layout.html.twig' %}
+
+{% block javascript %}
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.core.min.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.widget.min.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.mouse.min.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.sortable.min.js"></script>
+<script type="text/javascript">
+
+var count = '{{ form.ProductClasses|length }}';
+
+$(function () {
+
+    var $form = $('#product-class-form');
+    var $list = $('#product-class-list tbody');
+    var prototype = $list.data('prototype');
+    var $ClassName1 = $('#admin_product_class_register_ClassName1');
+    var $ClassName2 = $('#admin_product_class_register_ClassName2');
+    var $ClassCategory1 = $('#admin_product_class_register_ClassCategory1');
+    var $ClassCategory2 = $('#admin_product_class_register_ClassCategory2');
+
+    $list.sortable({
+        items: '> tr',
+        cursor: 'move'
+    });
+
+    $('#new-class-category').on('click', function (e) {
+        if ($ClassName1.val() === '') {
+            alert('規格1を選択して下さい。');
+            e.preventDefault();
+        } else if($ClassName1.val() === $ClassName2.val()) {
+            alert('規格1と規格2は、同じ値を使用できません。');
+            e.preventDefault();
+        }
+    });
+
+    $('.remove-product-class').on('click', function () {
+        $(this).closest('tr').remove();
+    });
+
+    $('#add-product-class').on('click', function () {
+
+        var classCategoryIds1 = $ClassCategory1.val();
+
+        if (classCategoryIds1 instanceof Array) {
+
+            var classCategoryIds2 = $ClassCategory2.length > 0 ?
+                $ClassCategory2.val() :
+                [''];
+
+            if (classCategoryIds2 instanceof Array) {
+
+                for (var i in classCategoryIds1) {
+
+                    var class_category_id1 = classCategoryIds1[i];
+
+                    for (var j in classCategoryIds2) {
+
+                        var class_category_id2 = classCategoryIds2[j];
+                        var $existsRows = $list.find('tr')
+                            .filter(':has(:input[name$="[ClassCategory1]"][value="' + class_category_id1 + '"])');
+
+                        $existsRows = class_category_id2.length > 0 ?
+                            $existsRows.filter(':has(:input[name$="[ClassCategory2]"][value="' + class_category_id2 + '"])') :
+                            $existsRows.filter(':has(:input[name$="[ClassCategory2]"]:not([value=""])), :has(:input[name$="[ClassCategory2]"]:not([value]))');
+
+                        if (!$existsRows.length) {
+                            var $prototype = $(prototype.replace(/__name__/g, count));
+                            $prototype.css('display', 'none');
+                            $prototype.find(':input[name$="[stock]"]').val(0);
+                            $prototype.find(':input[name$="[ClassCategory1]"]').val(class_category_id1);
+                            $prototype.find(':input[name$="[ClassCategory2]"]').val(class_category_id2);
+                            $form.append($prototype);
+                            count++;
+                        }
+                    }
+                }
+
+                $form.submit();
+
+            } else {
+                alert('規格2を選択してください。');
+            }
+        } else {
+            alert('規格1を選択してください。');
+        }
+    });
+
+    $('#register').on('click', function () {
+        $form
+            .attr('action', '{{ url('admin_product_class_register', {id: Product.id})|e }}')
+            .submit();
+    });
+
+    $('#copy').on('click', function() {
+
+        var $first = $list.find('> tr').first();
+        $list.find('> tr').each(function () {
+            var $target = $(this);
+            $first.find(':input').each(function (index) {
+                var $input = $target.find(':input').eq(index);
+                if ($input.is(':visible')) {
+                    if ($input.is(':checkbox')) {
+                        $input.prop('checked', $first.find(':input').eq(index).is(':checked'));
+                    } else {
+                        $input.val($first.find(':input').eq(index).val());
+                    }
+                }
+            });
+        });
+    });
+
+    $(':input[id$="_stock_unlimited"]').on('change', function() {
+
+        var $stock = $(this).closest('tr').find(':input[id$="_stock"]');
+        $(this).is(':checked') ?
+            $stock.attr('disabled', 'disabled') :
+            $stock.removeAttr('disabled');
+    }).trigger('change');
+});
+</script>
+{% endblock javascript %}
+
+{% block main %}
+<form id="product-class-form" class="form-inline" method="post" novalidate action="{{ url('admin_product_class', {id: Product.id}) }}">
+    {{ form_widget(form._token) }}
+    <div class="box">
+        <div class="box-header">
+            <a href="{{ url('admin_product_class_delete', {id: Product.id}) }}" {{ csrf_token_for_anchor() }} data-method="delete" data-message="商品規格を初期化してもよろしいですか？" class="btn btn-default pull-right">商品規格を初期化</a>
+            商品名 : <h3 class="box-title">{{ Product.name }}</h3>
+        </div>
+        <div class="box-body" style="padding-bottom: 30px;">
+            {% if form.ClassName1.vars.value is not empty and form.ClassName1.vars.valid and form.ClassName2.vars.valid %}
+                <button id="add-product-class" type="button" class="btn btn-primary pull-right">選択した商品規格を追加</button>
+                規格1 : <strong>{{ form.ClassName1.vars.data.name }}</strong>
+                {{ form_widget(form.ClassCategory1) }}
+                {% if form.ClassName2.vars.data.name is defined %}
+                    <br />規格2 : <strong>{{ form.ClassName2.vars.data.name }}</strong>
+                    {{ form_widget(form.ClassCategory2) }}
+                {% endif %}
+                <div style="display:none;">
+                    {{ form_widget(form.ClassName1, {type: 'hidden'}) }}
+                    {{ form_widget(form.ClassName2, {type: 'hidden'}) }}
+                </div>
+            {% else %}
+                {{ form_widget(form.ClassName1) }}
+                {{ form_widget(form.ClassName2) }}
+                <button id="new-class-category" type="submit" class="btn btn-primary pull-right">商品規格の設定</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header">
+                    {% if form.ProductClasses|length > 1 %}
+                        <button type="button" id="copy" class="btn btn-default pull-right btn-xs">1行目のデータをコピーする</button>
+                        <h3 class="box-title">ドラッグすると行を入れ替えられます。</h3>
+                    {% elseif form.ProductClasses|length == 0 %}
+                        <h3 class="box-title">商品規格が存在しません。</h3>
+                    {% endif %}
+                </div>
+                <div class="box-body no-padding">
+                    <table id="product-class-list" class="table table_list table-striped table-responsive with-border table-menu table-responsive-overflow">
+                        <thead>
+                        <tr>
+                            <th>削除</th>
+                            <th>規格1</th>
+                            <th>規格2</th>
+                            <th>商品コード</th>
+                            <th>在庫数</th>
+                            <th>販売制限数</th>
+                            <th>通常価格(円)</th>
+                            <th>販売価格(円)</th>
+                            {% if BaseInfo.option_product_delivery_fee %}
+                                <th>送料</th>
+                            {% endif %}
+                            <th>お届け可能日</th>
+                            {% if BaseInfo.option_product_tax_rule %}
+                                <th>販売税率</th>
+                            {% endif %}
+                            <th>商品種別</th>
+                        </tr>
+                        </thead>
+                        <tbody data-prototype="{{ form_widget(form.ProductClasses.vars.prototype)|e }}">
+                            {% for productClassForm in form.ProductClasses %}
+                                <tr>
+                                    <td>
+                                        <a href="javascript:void(0);" class="remove-product-class">
+                                            削除
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {{ productClassForm.vars.value.ClassCategory1 }}
+                                        {{ form_widget(productClassForm.ClassCategory1) }}
+                                    </td>
+                                    <td>
+                                        {{ productClassForm.vars.value.ClassCategory2 }}
+                                        {{ form_widget(productClassForm.ClassCategory2) }}
+                                    </td>
+                                    <td>
+                                        {{ form_widget(productClassForm.code) }}
+                                        {{ form_errors(productClassForm.code) }}
+                                    </td>
+                                    <td>
+                                        {{ form_widget(productClassForm.stock) }}
+                                        {{ form_errors(productClassForm.stock) }}
+                                        {{ form_widget(productClassForm.stock_unlimited) }}
+                                        {{ form_errors(productClassForm.stock_unlimited) }}
+                                    </td>
+                                    <td>
+                                        {{ form_widget(productClassForm.sale_limit) }}
+                                        {{ form_errors(productClassForm.sale_limit) }}
+                                    </td>
+                                    <td class="price_cell">
+                                        {{ form_widget(productClassForm.price01, {attr: {class: 'notmoney'}}) }}
+                                        {{ form_errors(productClassForm.price01) }}
+                                    </td>
+                                    <td class="price_cell">
+                                        {{ form_widget(productClassForm.price02, {attr: {class: 'notmoney'}}) }}
+                                        {{ form_errors(productClassForm.price02) }}
+                                    </td>
+                                    {% if BaseInfo.option_product_delivery_fee %}
+                                        <td>
+                                            {{ form_widget(productClassForm.delivery_fee, {attr: {class: 'notmoney'}}) }}
+                                            {{ form_errors(productClassForm.delivery_fee) }}
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        {{ form_widget(productClassForm.delivery_date) }}
+                                        {{ form_errors(productClassForm.delivery_date) }}
+                                    </td>
+                                    {% if BaseInfo.option_product_tax_rule %}
+                                        <td>
+                                            {{ form_widget(productClassForm.tax_rate) }}
+                                            {{ form_errors(productClassForm.tax_rate) }}
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        {{ form_widget(productClassForm.product_type) }}
+                                        {{ form_errors(productClassForm.product_type) }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {{ form_errors(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-3 text-center btn_area">
+            {% if form.ProductClasses|length > 0 %}
+                <button type="button" id="register" class="btn btn-primary btn-lg btn-block">登録</button>
+            {% endif %}
+            <p>
+                <a href="{{ url('admin_product_page', { page_no : app.session.get('eccube.admin.product.search.page_no')|default('1') } ) }}?resume=1">前のページに戻る</a>
+            </p>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -328,6 +328,7 @@ class EccubeServiceProvider implements ServiceProviderInterface
             $types[] = new \Eccube\Form\Type\Admin\CustomerType($app['config']);
             $types[] = new \Eccube\Form\Type\Admin\ClassNameType($app['config']);
             $types[] = new \Eccube\Form\Type\Admin\ClassCategoryType($app['config']);
+            $types[] = new \Eccube\Form\Type\Admin\ProductClassRegisterType($app['eccube.repository.class_name']);
             $types[] = new \Eccube\Form\Type\Admin\CategoryType($app['config']);
             $types[] = new \Eccube\Form\Type\Admin\MemberType($app['config']);
             $types[] = new \Eccube\Form\Type\Admin\AuthorityRoleType($app['config']);
