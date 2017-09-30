@@ -413,6 +413,9 @@ function fnClass(action) {
                                             <button class="btn btn-default btn-block btn-sm" onclick="fnClass('{{ url('admin_product_product_class', { 'id' : id }) }}');return false;">
                                                 規格設定
                                             </button>
+                                            <button class="btn btn-default btn-block btn-sm" onclick="fnClass('{{ url('admin_product_class', {id: id}) }}');return false;">
+                                                新規格設定
+                                            </button>
                                         {% endif %}
                                     </div>
                                 </div>
