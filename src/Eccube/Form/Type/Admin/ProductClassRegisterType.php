@@ -74,13 +74,54 @@ class ProductClassRegisterType extends AbstractType
             $form = $event->getForm();
             $data = $event->getData();
 
-            /** @var \Eccube\Entity\ClassName $ClassName1 */
-            $ClassName1 = $data['ClassName1'];
+            if ($data) {
 
-            /** @var \Eccube\Entity\ClassName $ClassName2 */
-            $ClassName2 = $data['ClassName2'];
+                /** @var \Eccube\Entity\ClassName $ClassName1 */
+                $ClassName1 = $data['ClassName1'];
 
-            $self->addClassCategory($form, $ClassName1, $ClassName2);
+                /** @var \Eccube\Entity\ClassName $ClassName2 */
+                $ClassName2 = $data['ClassName2'];
+
+                $self->addClassCategory($form, $ClassName1, $ClassName2);
+
+                if (isset($data['ProductClasses'])) {
+
+                    /** @var \Eccube\Entity\ProductClass[] $ProductClasses */
+                    $ProductClasses = $data['ProductClasses'];
+                    if ($ProductClasses instanceof \Doctrine\Common\Collections\Collection) {
+                        $ProductClasses = $ProductClasses->toArray();
+                    }
+
+                    usort($ProductClasses, function ($PC1, $PC2) {
+
+                        /** @var \Eccube\Entity\ProductClass $PC1 */
+                        $pc1cc1_id = $PC1->getClassCategory1() ?
+                            $PC1->getClassCategory1()->getId() :
+                            null;
+                        $pc1cc2_id = $PC1->getClassCategory2() ?
+                            $PC1->getClassCategory2()->getId() :
+                            null;
+
+                        /** @var \Eccube\Entity\ProductClass $PC2 */
+                        $pc2cc1_id = $PC2->getClassCategory1() ?
+                            $PC2->getClassCategory1()->getId() :
+                            null;
+                        $pc2cc2_id = $PC2->getClassCategory2() ?
+                            $PC2->getClassCategory2()->getId() :
+                            null;
+
+                        if ($pc1cc1_id === $pc2cc1_id && $pc1cc2_id === $pc2cc2_id) {
+                            return 0;
+                        }
+
+                        return ($pc1cc1_id < $pc2cc1_id || ($pc1cc1_id === $pc2cc1_id && $pc1cc2_id < $pc2cc2_id)) ?
+                            -1 :
+                            1;
+                    });
+
+                    $form['ProductClasses']->setData($ProductClasses);
+                }
+            }
         });
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($self, $classNameRepository) {
@@ -104,10 +145,24 @@ class ProductClassRegisterType extends AbstractType
                 $self->addClassCategory($form, $ClassName1, $ClassName2);
             }
 
-            if (isset($data['ProductClasses'])) {
-                $data['ProductClasses'] = is_array($data['ProductClasses']) ?
-                    array_values($data['ProductClasses']) :
-                    $data['ProductClasses'];
+            if (isset($data['ProductClasses']) && is_array($data['ProductClasses'])) {
+
+                usort($data['ProductClasses'], function ($pc1, $pc2) {
+
+                    $pc1cc1_id = $pc1['ClassCategory1'];
+                    $pc1cc2_id = $pc1['ClassCategory2'];
+
+                    $pc2cc1_id = $pc2['ClassCategory1'];
+                    $pc2cc2_id = $pc2['ClassCategory2'];
+
+                    if ($pc1cc1_id === $pc2cc1_id && $pc1cc2_id === $pc2cc2_id) {
+                        return 0;
+                    }
+
+                    return ($pc1cc1_id < $pc2cc1_id || ($pc1cc1_id === $pc2cc1_id && $pc1cc2_id < $pc2cc2_id)) ?
+                        -1 :
+                        1;
+                });
             }
 
             $event->setData($data);

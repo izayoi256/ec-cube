@@ -8,10 +8,6 @@
 {% form_theme form 'Form/bootstrap_3_horizontal_layout.html.twig' %}
 
 {% block javascript %}
-<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.core.min.js"></script>
-<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.widget.min.js"></script>
-<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.mouse.min.js"></script>
-<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/jquery.ui/jquery.ui.sortable.min.js"></script>
 <script type="text/javascript">
 
 var count = '{{ form.ProductClasses|length }}';
@@ -25,11 +21,6 @@ $(function () {
     var $ClassName2 = $('#admin_product_class_register_ClassName2');
     var $ClassCategory1 = $('#admin_product_class_register_ClassCategory1');
     var $ClassCategory2 = $('#admin_product_class_register_ClassCategory2');
-
-    $list.sortable({
-        items: '> tr',
-        cursor: 'move'
-    });
 
     $('#new-class-category').on('click', function (e) {
         if ($ClassName1.val() === '') {
@@ -163,7 +154,6 @@ $(function () {
                 <div class="box-header">
                     {% if form.ProductClasses|length > 1 %}
                         <button type="button" id="copy" class="btn btn-default pull-right btn-xs">1行目のデータをコピーする</button>
-                        <h3 class="box-title">ドラッグすると行を入れ替えられます。</h3>
                     {% elseif form.ProductClasses|length == 0 %}
                         <h3 class="box-title">商品規格が存在しません。</h3>
                     {% endif %}
