@@ -76,47 +76,63 @@ class ProductClassRegisterController extends AbstractController
                 /** @var \Eccube\Entity\ProductClass $ProductClass */
                 foreach ($form['ProductClasses']->getData() as $ProductClass) {
 
+                    $ProductClass->setProduct($Product);
+
+                    /** @var \Eccube\Entity\ProductClass $ExistsProductClass */
+                    $ExistsProductClass = $ProductClasses->filter(function (\Eccube\Entity\ProductClass $OriginalProductClass) use ($ProductClass) {
+                        return
+                            $ProductClass->getClassCategory1() === $OriginalProductClass->getClassCategory1() &&
+                            $ProductClass->getClassCategory2() === $OriginalProductClass->getClassCategory2();
+                    })->first();
+
+                    if (!$ExistsProductClass) {
+
+                        $ProductStock = new \Eccube\Entity\ProductStock();
+                        $ProductStock->setProductClass($ProductClass);
+
+                        $ProductClass
+                            ->setProduct($Product)
+                            ->setDelFlg(Constant::DISABLED)
+                        ;
+
+                        $ProductClasses->add($ProductClass);
+
+                        $app['orm.em']->persist($ProductClass);
+                        $app['orm.em']->persist($ProductStock);
+
+                        // 商品税率が設定されている場合、商品税率をセット
+                        if ($BaseInfo->getOptionProductTaxRule() == Constant::ENABLED) {
+
+                            // 初期設定の税設定.
+                            $TaxRule = $app['eccube.repository.tax_rule']->find(\Eccube\Entity\TaxRule::DEFAULT_TAX_RULE_ID);
+                            // 初期税率設定の計算方法を設定する
+                            $CalcRule = $TaxRule->getCalcRule();
+
+                            if ($ProductClass->getTaxRate() !== false && $ProductClass !== null) {
+                                $TaxRule = new \Eccube\Entity\TaxRule();
+                                $TaxRule
+                                    ->setProduct($Product)
+                                    ->setProductClass($ProductClass)
+                                    ->setCalcRule($CalcRule)
+                                    ->setTaxRate($ProductClass->getTaxRate())
+                                    ->setTaxAdjust(0)
+                                    ->setApplyDate(new \DateTime())
+                                    ->setDelFlg(Constant::DISABLED)
+                                ;
+                                $app['orm.em']->persist($TaxRule);
+                            }
+                        }
+                    } else {
+
+                        $this->copyProductClass($app, $ExistsProductClass, $ProductClass);
+                        $ExistsProductClass->setDelFlg(Constant::DISABLED);
+                        $ProductStock = $ExistsProductClass->getProductStock();
+                    }
+
                     $stock = $ProductClass->getStockUnlimited() ?
                         null :
                         $ProductClass->getStock();
-
-                    $ProductStock = new \Eccube\Entity\ProductStock();
-                    $ProductStock->setProductClass($ProductClass);
-
-                    $ProductClass
-                        ->setProduct($Product)
-                        ->setProductStock($ProductStock)
-                        ->setStock($stock)
-                        ->setDelFlg(Constant::DISABLED)
-                    ;
-
-                    $ProductClasses->add($ProductClass);
-
-                    $app['orm.em']->persist($ProductClass);
-                    $app['orm.em']->persist($ProductStock);
-
-                    // 商品税率が設定されている場合、商品税率をセット
-                    if ($BaseInfo->getOptionProductTaxRule() == Constant::ENABLED) {
-
-                        // 初期設定の税設定.
-                        $TaxRule = $app['eccube.repository.tax_rule']->find(\Eccube\Entity\TaxRule::DEFAULT_TAX_RULE_ID);
-                        // 初期税率設定の計算方法を設定する
-                        $CalcRule = $TaxRule->getCalcRule();
-
-                        if ($ProductClass->getTaxRate() !== false && $ProductClass !== null) {
-                            $TaxRule = new \Eccube\Entity\TaxRule();
-                            $TaxRule
-                                ->setProduct($Product)
-                                ->setProductClass($ProductClass)
-                                ->setCalcRule($CalcRule)
-                                ->setTaxRate($ProductClass->getTaxRate())
-                                ->setTaxAdjust(0)
-                                ->setApplyDate(new \DateTime())
-                                ->setDelFlg(Constant::DISABLED)
-                            ;
-                            $app['orm.em']->persist($TaxRule);
-                        }
-                    }
+                    $ProductStock->setStock($stock);
                 }
 
                 $app['orm.em']->flush();
@@ -183,5 +199,48 @@ class ProductClassRegisterController extends AbstractController
                 $Product->getProductClasses()->first()->getClassCategory2()->getClassName() :
                 null,
         );
+    }
+
+    /**
+     * @param Application $app
+     * @param \Eccube\Entity\ProductClass $dest
+     * @param \Eccube\Entity\ProductClass $src
+     */
+    protected function copyProductClass(Application $app, \Eccube\Entity\ProductClass $dest, \Eccube\Entity\ProductClass $src)
+    {
+        $dest
+            ->setDeliveryDate($src->getDeliveryDate())
+            ->setProduct($src->getProduct())
+            ->setProductType($src->getProductType())
+            ->setCode($src->getCode())
+            ->setStock($src->getStock())
+            ->setStockUnlimited($src->getStockUnlimited())
+            ->setSaleLimit($src->getSaleLimit())
+            ->setPrice01($src->getPrice01())
+            ->setPrice02($src->getPrice02())
+            ->setDeliveryFee($src->getDeliveryFee());
+
+        // 個別消費税
+        $BaseInfo = $app['eccube.repository.base_info']->get();
+        if ($BaseInfo->getOptionProductTaxRule() == Constant::ENABLED) {
+            if ($src->getTaxRate() !== false && $src->getTaxRate() !== null) {
+                $dest->setTaxRate($src->getTaxRate());
+                if ($dest->getTaxRule()) {
+                    $dest->getTaxRule()->setTaxRate($src->getTaxRate());
+                    $dest->getTaxRule()->setDelFlg(Constant::DISABLED);
+                } else {
+                    $taxrule = $app['eccube.repository.tax_rule']->newTaxRule();
+                    $taxrule->setTaxRate($src->getTaxRate());
+                    $taxrule->setApplyDate(new \DateTime());
+                    $taxrule->setProduct($dest->getProduct());
+                    $taxrule->setProductClass($dest);
+                    $dest->setTaxRule($taxrule);
+                }
+            } else {
+                if ($dest->getTaxRule()) {
+                    $dest->getTaxRule()->setDelFlg(Constant::ENABLED);
+                }
+            }
+        }
     }
 }
