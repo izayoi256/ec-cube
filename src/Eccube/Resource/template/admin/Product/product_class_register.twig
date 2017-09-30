@@ -70,6 +70,18 @@ $(function () {
                             $prototype.find(':input[name$="[ClassCategory2]"]').val(class_category_id2);
                             $form.append($prototype);
                             count++;
+
+                            var $inputs = $prototype.find(':input');
+                            {% set FirstProductClass = Product.ProductClasses.first %}
+                            $inputs.filter('[name$="[code]"]').val('{{ FirstProductClass.code|escape }}');
+                            $inputs.filter('[name$="[stock]"]').val('{{ FirstProductClass.stock|escape }}');
+                            $inputs.filter('[name$="[stock_unlimited]"]').prop('checked', {{ FirstProductClass.stock_unlimited ? 'true' : 'false' }});
+                            $inputs.filter('[name$="[sale_limit]"]').val('{{ FirstProductClass.sale_limit|escape }}');
+                            $inputs.filter('[name$="[price01]"]').val('{{ FirstProductClass.price01|escape }}');
+                            $inputs.filter('[name$="[price02]"]').val('{{ FirstProductClass.price02|escape }}');
+                            $inputs.filter('[name$="[delivery_date]"]').val('{{ FirstProductClass.DeliveryDate.id|escape|default('') }}');
+                            $inputs.filter('[name$="[tax_rate]"]').val('{{ FirstProductClass.tax_rate|escape }}');
+                            $inputs.filter('[name$="[product_type]"]').val('{{ FirstProductClass.ProductType.id|escape|default('') }}');
                         }
                     }
                 }
