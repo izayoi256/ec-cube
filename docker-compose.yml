@@ -1,0 +1,32 @@
+version: "3"
+services:
+  ec-cube:
+    build: ./docker/ec-cube
+    volumes:
+      - .:/var/www/html
+    environment:
+      - HOST_UID
+      - TZ=${TZ:-Asia/Tokyo}
+      - XDEBUG_PORT=${ECCUBE_XDEBUG_PORT:-9000}
+      - APP_ENV=${ECCUBE_APP_ENV:-dev}
+      - APP_DEBUG=${ECCUBE_APP_DEBUG:-1}
+      - DATABASE_URL=${ECCUBE_DATABASE_URL:-sqlite:///%kernel.project_dir%/var/eccube.db}
+      - DATABASE_SERVER_VERSION=${ECCUBE_DATABASE_SERVER_VERSION:-3}
+      - MAILER_URL=${ECCUBE_MAILER_URL:-null://localhost}
+      - ECCUBE_AUTH_MAGIC=${ECCUBE_AUTH_MAGIC:-supersecureauthmagic}
+      - TRUSTED_PROXIES=${ECCUBE_TRUSTED_PROXIES:-}
+      - TRUSTED_HOSTS=${ECCUBE_TRUSTED_HOSTS:-}
+      - ECCUBE_LOCALE=${ECCUBE_LOCALE:-ja}
+      - ECCUBE_TIMEZONE=${ECCUBE_TIMEZONE:-Asia/Tokyo}
+      - ECCUBE_CURRENCY=${ECCUBE_CURRENCY:-JPY}
+      - ECCUBE_ADMIN_ROUTE=${ECCUBE_ADMIN_ROUTE:-admin}
+      - ECCUBE_USER_DATA_ROUTE=${ECCUBE_USER_DATA_ROUTE:-user_data}
+      - ECCUBE_ADMIN_ALLOW_HOSTS=${ECCUBE_ADMIN_ALLOW_HOSTS:-[]}
+      - ECCUBE_FORCE_SSL=${ECCUBE_FORCE_SSL:-false}
+      - ECCUBE_TEMPLATE_CODE=${ECCUBE_TEMPLATE_CODE:-default}
+      - ECCUBE_COOKIE_NAME=${ECCUBE_COOKIE_NAME:-eccube}
+      - ECCUBE_COOKIE_PATH=${ECCUBE_COOKIE_PATH:-/}
+      - ECCUBE_COOKIE_LIFETIME=${ECCUBE_COOKIE_LIFETIME:-0}
+      - ECCUBE_GC_MAXLIFETIME=${ECCUBE_GC_MAXLIFETIME:-1440}
+    ports:
+      - "${ECCUBE_HTTP_PORT:-8080}:80"

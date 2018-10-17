@@ -71,3 +71,19 @@ Issuesの利用方法については、[こちら](https://github.com/EC-CUBE/ec
 コードの提供・追加、修正・変更その他「EC-CUBE」への開発の御協力（Issue投稿、PullRequest投稿など、GitHub上での活動）を行っていただく場合には、
 [EC-CUBEのコピーライトポリシー](https://github.com/EC-CUBE/ec-cube/blob/50de4ac511ab5a5577c046b61754d98be96aa328/LICENSE.txt)をご理解いただき、ご了承いただく必要がございます。
 Issueの投稿やPullRequestを送信する際は、EC-CUBEのコピーライトポリシーに同意したものとみなします。
+
+## docker-composeでの開発環境構築
+
+``` sh
+$ cat docker-compose.yml # 記載されているデフォルトの環境変数を確認
+$ cp .default.env .env # 環境変数を変更する場合は.envファイルに記述
+$ HOST_UID=$(id -u) docker-compose up -d # 生成されるファイルの権限を揃えるため、HOST_UIDに現在のユーザーのUIDをセットする。
+```
+
+- URL: http://localhost:8080/
+- リモートデバッグポート: 9000
+- いずれのポート番号も環境変数にて変更可能。
+
+### 既知の不具合
+
+```HOST_UID```がコンテナ側に既に存在する場合、コンテナの起動に失敗する。
