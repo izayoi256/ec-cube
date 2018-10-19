@@ -16,6 +16,10 @@ if [ -e "composer.json" ]; then
     sudo -u www-data composer install
 fi
 
+if [ -e "package.json" ]; then
+    sudo -u www-data npm install
+fi
+
 if [ "${1#-}" != "$1" ]; then
 	set -- apache2-foreground "$@"
 fi

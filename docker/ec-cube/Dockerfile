@@ -14,6 +14,10 @@ RUN set -x \
         libsqlite3-dev \
         libpq-dev \
         libicu-dev \
+        gnupg2 \
+    && wget -qO- https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y --no-install-recommends \
+        nodejs \
     && docker-php-ext-install \
         intl \
         mbstring \
@@ -39,8 +43,7 @@ RUN curl -sS https://getcomposer.org/installer \
         --filename=composer \
         --install-dir=/usr/local/bin \
     && COMPOSER_ALLOW_SUPERUSER=1 composer global require --optimize-autoloader "hirak/prestissimo" \
-    && mkdir -p /var/www/.composer \
-    && chown www-data /var/www/.composer \
+    && chown www-data /var/www \
     && chmod g+s /var/www/html
 
 COPY ./my.ini /usr/local/etc/php/conf.d/my.ini
